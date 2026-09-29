@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" width="100%" height="100%">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="hostGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <linearGradient id="vmControlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0f9ff"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="vmServerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdfa"/>
+      <stop offset="100%" stop-color="#ccfbf1"/>
+    </linearGradient>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0078d4"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <marker id="arrowTeal" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0d9488"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284c7"/>
+    </marker>
+  </defs>
+
+  <!-- Background Base Container: Hyper-V Host Environment -->
+  <rect x="15" y="15" width="890" height="370" rx="16" fill="url(#hostGrad)" stroke="#cbd5e1" stroke-width="2" filter="url(#cardShadow)"/>
+
+  <!-- Host Top Banner -->
+  <path d="M 15 31 Q 15 15 31 15 L 889 15 Q 905 15 905 31 L 905 52 L 15 52 Z" fill="#0f172a"/>
+  
+  <!-- Windows Hyper-V Logo Badge -->
+  <g transform="translate(32, 23)">
+    <!-- 4 Squares Windows Icon -->
+    <rect x="0" y="0" width="7" height="7" fill="#00a4ef"/>
+    <rect x="9" y="0" width="7" height="7" fill="#00a4ef"/>
+    <rect x="0" y="9" width="7" height="7" fill="#00a4ef"/>
+    <rect x="9" y="9" width="7" height="7" fill="#00a4ef"/>
+    <text x="24" y="13" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" fill="#ffffff">Windows Physical Host &bull; Microsoft Hyper-V Virtualization Platform</text>
+  </g>
+
+  <rect x="685" y="24" width="205" height="20" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <circle cx="697" cy="34" r="4" fill="#10b981"/>
+  <text x="708" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Internal Hyper-V vSwitch</text>
+
+  <!-- LEFT COLUMN: Physical Workstation Access (Admin Browser & Terminal) -->
+  <g transform="translate(40, 75)">
+    <rect x="0" y="0" width="210" height="285" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#cardShadow)"/>
+    
+    <!-- Header -->
+    <rect x="0" y="0" width="210" height="38" rx="12" fill="#f8fafc"/>
+    <rect x="0" y="26" width="210" height="12" fill="#f8fafc"/>
+    <line x1="0" y1="38" x2="210" y2="38" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="16" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" fill="#1e293b">ADMINISTRATOR WORKSTATION</text>
+
+    <!-- Browser Client Block -->
+    <g transform="translate(14, 52)">
+      <rect x="0" y="0" width="182" height="98" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <rect x="0" y="0" width="182" height="22" rx="8" fill="#e2e8f0"/>
+      <rect x="0" y="14" width="182" height="8" fill="#e2e8f0"/>
+      <circle cx="10" cy="11" r="3.5" fill="#ef4444"/>
+      <circle cx="20" cy="11" r="3.5" fill="#f59e0b"/>
+      <circle cx="30" cy="11" r="3.5" fill="#10b981"/>
+      <rect x="42" y="5" width="130" height="12" rx="4" fill="#ffffff"/>
+      <text x="50" y="14" font-family="monospace" font-size="8" fill="#64748b">http://server1.local</text>
+      
+      <text x="12" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#0f172a">Web Browser Access</text>
+      <text x="12" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#64748b">Port 80 (Host Portal)</text>
+      <text x="12" y="78" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#64748b">Port 8080 (Containers)</text>
+    </g>
+
+    <!-- Terminal Client Block -->
+    <g transform="translate(14, 165)">
+      <rect x="0" y="0" width="182" height="102" rx="8" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+      <rect x="0" y="0" width="182" height="20" rx="8" fill="#1e293b"/>
+      <rect x="0" y="12" width="182" height="8" fill="#1e293b"/>
+      <circle cx="10" cy="10" r="3" fill="#64748b"/>
+      <circle cx="18" cy="10" r="3" fill="#64748b"/>
+      <circle cx="26" cy="10" r="3" fill="#64748b"/>
+      <text x="36" y="14" font-family="monospace" font-size="8" font-weight="600" fill="#94a3b8">Terminal &bull; SSH Session</text>
+
+      <text x="12" y="42" font-family="monospace" font-size="10" fill="#2dd4bf">&gt; ssh control.local</text>
+      <text x="12" y="60" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#94a3b8">Ansible CLI &bull; Playbooks</text>
+      <text x="12" y="76" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#94a3b8">Fleet Orchestration</text>
+      <rect x="12" y="86" width="60" height="4" fill="#2dd4bf" opacity="0.6"/>
+    </g>
+  </g>
+
+  <!-- MIDDLE & RIGHT: Hyper-V Linux Virtual Machines Subnet -->
+  <rect x="275" y="75" width="605" height="285" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#cardShadow)"/>
+  
+  <rect x="275" y="75" width="605" height="36" rx="12" fill="#f8fafc"/>
+  <rect x="275" y="99" width="605" height="12" fill="#f8fafc"/>
+  <line x1="275" y1="111" x2="880" y2="111" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="295" y="98" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" fill="#0f172a">HYPER-V VIRTUAL GUEST MACHINES &bull; UBUNTU LINUX</text>
+  
+  <!-- VM 1: control.local -->
+  <g transform="translate(295, 125)">
+    <rect x="0" y="0" width="175" height="220" rx="10" fill="url(#vmControlGrad)" stroke="#0284c7" stroke-width="1.5"/>
+    
+    <!-- VM Header -->
+    <rect x="0" y="0" width="175" height="34" rx="10" fill="#0284c7"/>
+    <rect x="0" y="24" width="175" height="10" fill="#0284c7"/>
+    <text x="12" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="800" fill="#ffffff">control.local</text>
+
+    <!-- VM Badge -->
+    <rect x="12" y="44" width="151" height="20" rx="5" fill="#ffffff" stroke="#bae6fd" stroke-width="1"/>
+    <text x="20" y="58" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#0369a1">Linux VM (Control Node)</text>
+
+    <!-- Content / Stack -->
+    <g transform="translate(12, 74)">
+      <rect x="0" y="0" width="151" height="60" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#0f172a">Ansible Engine</text>
+      <text x="10" y="36" font-family="system-ui, -apple-system, sans-serif" font-size="9.5" fill="#64748b">&bull; inventory.ini</text>
+      <text x="10" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="9.5" fill="#64748b">&bull; playbooks &amp; templates</text>
+    </g>
+
+    <g transform="translate(12, 144)">
+      <rect x="0" y="0" width="151" height="64" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="10" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#0f172a">OpenSSH Client</text>
+      <text x="10" y="34" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Passwordless Key Auth</text>
+      <text x="10" y="48" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#0284c7">SSH Orchestration</text>
+    </g>
+  </g>
+
+  <!-- VM 2: server1.local -->
+  <g transform="translate(490, 125)">
+    <rect x="0" y="0" width="180" height="220" rx="10" fill="url(#vmServerGrad)" stroke="#0d9488" stroke-width="1.5"/>
+    
+    <!-- VM Header -->
+    <rect x="0" y="0" width="180" height="34" rx="10" fill="#0d9488"/>
+    <rect x="0" y="24" width="180" height="10" fill="#0d9488"/>
+    <text x="12" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="800" fill="#ffffff">server1.local</text>
+
+    <!-- VM Badge -->
+    <rect x="12" y="44" width="156" height="20" rx="5" fill="#ffffff" stroke="#99f6e4" stroke-width="1"/>
+    <text x="20" y="58" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#0f766e">Linux Target Server 1</text>
+
+    <!-- Host Service Layer -->
+    <g transform="translate(12, 72)">
+      <rect x="0" y="0" width="156" height="60" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <rect x="8" y="8" width="48" height="16" rx="4" fill="#dbeafe"/>
+      <text x="14" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#1e40af">PORT 80</text>
+      <text x="62" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#0f172a">Host Nginx</text>
+      <text x="8" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Managed via systemd</text>
+      <text x="8" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Demo 1 &amp; Demo 3</text>
+    </g>
+
+    <!-- Container Workload Layer -->
+    <g transform="translate(12, 140)">
+      <rect x="0" y="0" width="156" height="68" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <rect x="8" y="8" width="58" height="16" rx="4" fill="#fef3c7"/>
+      <text x="14" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#92400e">PORT 8080</text>
+      <text x="72" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#0f172a">Docker</text>
+      <text x="8" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Container: portal-service</text>
+      <text x="8" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#0d9488">Mount: /opt/portal/html</text>
+      <text x="8" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="8.5" fill="#64748b">Demo 2 &amp; Demo 4</text>
+    </g>
+  </g>
+
+  <!-- VM 3: server2.local -->
+  <g transform="translate(685, 125)">
+    <rect x="0" y="0" width="180" height="220" rx="10" fill="url(#vmServerGrad)" stroke="#0d9488" stroke-width="1.5"/>
+    
+    <!-- VM Header -->
+    <rect x="0" y="0" width="180" height="34" rx="10" fill="#0d9488"/>
+    <rect x="0" y="24" width="180" height="10" fill="#0d9488"/>
+    <text x="12" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="800" fill="#ffffff">server2.local</text>
+
+    <!-- VM Badge -->
+    <rect x="12" y="44" width="156" height="20" rx="5" fill="#ffffff" stroke="#99f6e4" stroke-width="1"/>
+    <text x="20" y="58" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#0f766e">Linux Target Server 2</text>
+
+    <!-- Host Service Layer -->
+    <g transform="translate(12, 72)">
+      <rect x="0" y="0" width="156" height="60" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <rect x="8" y="8" width="48" height="16" rx="4" fill="#dbeafe"/>
+      <text x="14" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#1e40af">PORT 80</text>
+      <text x="62" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#0f172a">Host Nginx</text>
+      <text x="8" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Managed via systemd</text>
+      <text x="8" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Demo 3 (Drift Check)</text>
+    </g>
+
+    <!-- Container Workload Layer -->
+    <g transform="translate(12, 140)">
+      <rect x="0" y="0" width="156" height="68" rx="6" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+      <rect x="8" y="8" width="58" height="16" rx="4" fill="#fef3c7"/>
+      <text x="14" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#92400e">PORT 8080</text>
+      <text x="72" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="10.5" font-weight="700" fill="#0f172a">Docker</text>
+      <text x="8" y="38" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#64748b">Container: portal-service</text>
+      <text x="8" y="50" font-family="system-ui, -apple-system, sans-serif" font-size="9" fill="#0d9488">Mount: /opt/portal/html</text>
+      <text x="8" y="62" font-family="system-ui, -apple-system, sans-serif" font-size="8.5" fill="#64748b">Demo 4 (Fleet Rollout)</text>
+    </g>
+  </g>
+
+  <!-- CONNECTIVITY / ARROWS -->
+  <!-- 1. SSH from Admin to control.local -->
+  <path d="M 224 260 L 290 260" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrowBlue)"/>
+  
+  <!-- 2. Ansible SSH from control.local to server1 and server2 -->
+  <path d="M 470 190 C 478 190, 480 190, 488 190" fill="none" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <path d="M 470 205 C 478 205, 520 205, 580 205 C 640 205, 660 205, 683 205" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-dasharray="5,3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Flow labels -->
+  <rect x="472" y="172" width="70" height="14" rx="3" fill="#0284c7"/>
+  <text x="476" y="182" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#ffffff">Ansible SSH</text>
+
+  <!-- 3. HTTP Browser Traffic to Servers -->
+  <path d="M 224 125 C 260 125, 340 68, 550 68 C 650 68, 710 100, 710 120" fill="none" stroke="#0d9488" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrowTeal)"/>
+  <rect x="360" y="58" width="135" height="16" rx="4" fill="#0d9488"/>
+  <text x="366" y="70" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#ffffff">HTTP Browser Traffic (:80, :8080)</text>
+
+</svg>

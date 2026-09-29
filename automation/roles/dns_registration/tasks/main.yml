@@ -1,0 +1,83 @@
+---
+# automation/roles/dns_registration/tasks/main.yml
+# =============================================================================
+# COGNITOZ BETALAB - AZURE DNS RECORD REGISTRATION
+# =============================================================================
+# Registers student DNS A-records in Azure DNS (steven.asia)
+# Registers both prefix-scoped and direct student seat records.
+
+- name: "Register Cohort SSH A-Record (ssh.{{ prefix }}-stuXX.{{ dns_zone_name }})"
+  when:
+    - (azure_client_id | length > 0) and (azure_secret | length > 0)
+    - not ((teardown_dns | default(false)) | bool)
+    - (hostvars[prefix ~ '-stu' ~ ('%02d' | format(current_stu_id))].jump_host_ip | default(hostvars[prefix ~ '-stu' ~ ('%02d' | format(current_stu_id))].ansible_host | default('')) | length > 0)
+  vars:
+    student_tag: "{{ prefix }}-stu{{ '%02d' | format(current_stu_id) }}"
+    ssh_record: "ssh.{{ student_tag }}"
+    current_vm_host: "{{ hostvars[student_tag] | default({}) }}"
+    student_ip: "{{ current_vm_host.jump_host_ip | default(current_vm_host.ansible_host | default('')) }}"
+  azure.azcollection.azure_rm_dnsrecordset:
+    client_id: "{{ azure_client_id }}"
+    secret: "{{ azure_secret }}"
+    tenant: "{{ azure_tenant }}"
+    subscription_id: "{{ azure_subscription_id }}"
+    resource_group: "{{ dns_zone_rg }}"
+    zone_name: "{{ dns_zone_name }}"
+    relative_name: "{{ ssh_record }}"
+    record_type: "A"
+    time_to_live: 300
+    records:
+      - entry: "{{ student_ip }}"
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: current_stu_id
+  ignore_errors: true
+
+- name: "Register Standard Seat SSH A-Record (ssh.stuXX.{{ dns_zone_name }})"
+  when:
+    - (azure_client_id | length > 0) and (azure_secret | length > 0)
+    - not ((teardown_dns | default(false)) | bool)
+    - (hostvars[prefix ~ '-stu' ~ ('%02d' | format(current_stu_id))].jump_host_ip | default(hostvars[prefix ~ '-stu' ~ ('%02d' | format(current_stu_id))].ansible_host | default('')) | length > 0)
+  vars:
+    student_tag: "{{ prefix }}-stu{{ '%02d' | format(current_stu_id) }}"
+    seat_record: "ssh.stu{{ '%02d' | format(current_stu_id) }}"
+    current_vm_host: "{{ hostvars[student_tag] | default({}) }}"
+    student_ip: "{{ current_vm_host.jump_host_ip | default(current_vm_host.ansible_host | default('')) }}"
+  azure.azcollection.azure_rm_dnsrecordset:
+    client_id: "{{ azure_client_id }}"
+    secret: "{{ azure_secret }}"
+    tenant: "{{ azure_tenant }}"
+    subscription_id: "{{ azure_subscription_id }}"
+    resource_group: "{{ dns_zone_rg }}"
+    zone_name: "{{ dns_zone_name }}"
+    relative_name: "{{ seat_record }}"
+    record_type: "A"
+    time_to_live: 300
+    records:
+      - entry: "{{ student_ip }}"
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: current_stu_id
+  ignore_errors: true
+
+- name: "Delete SSH A-Records on Teardown"
+  when:
+    - (azure_client_id | length > 0) and (azure_secret | length > 0)
+    - (teardown_dns | default(false)) | bool
+  vars:
+    student_tag: "{{ prefix }}-stu{{ '%02d' | format(current_stu_id) }}"
+    ssh_record: "ssh.{{ student_tag }}"
+  azure.azcollection.azure_rm_dnsrecordset:
+    client_id: "{{ azure_client_id }}"
+    secret: "{{ azure_secret }}"
+    tenant: "{{ azure_tenant }}"
+    subscription_id: "{{ azure_subscription_id }}"
+    resource_group: "{{ dns_zone_rg }}"
+    zone_name: "{{ dns_zone_name }}"
+    relative_name: "{{ ssh_record }}"
+    record_type: "A"
+    state: absent
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: current_stu_id
+  ignore_errors: true

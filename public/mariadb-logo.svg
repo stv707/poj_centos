@@ -1,0 +1,13 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="mariadb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#003545"/>
+      <stop offset="100%" stop-color="#009E96"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#mariadb-grad)"/>
+  <path d="M38 90 C34 85 32 78 34 70 C36 60 44 54 48 48 C51 43 51 37 49 32 C48 30 50 28 53 29 C62 33 66 43 65 52 C64 57 60 62 57 67 C53 72 50 78 52 84 C53 87 56 89 59 87 C66 82 72 73 78 65 C83 58 87 50 93 43 C94 41 97 42 97 44 C96 52 91 61 86 69 C80 78 72 87 62 92 C54 96 44 96 38 90 Z" fill="#ffffff" opacity="0.95"/>
+  <circle cx="56" cy="38" r="3" fill="#ffffff"/>
+  <path d="M68 68 C74 65 80 61 86 56" stroke="#C3F0EC" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M64 76 C72 73 78 68 84 62" stroke="#C3F0EC" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

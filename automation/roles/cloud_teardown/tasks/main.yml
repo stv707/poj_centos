@@ -1,0 +1,33 @@
+---
+- name: "Display POJ CentOS teardown target"
+  ansible.builtin.debug:
+    msg:
+      - "Tearing down resources for prefix: {{ prefix }}"
+      - "Target students: {{ student_count }}"
+
+- name: "Query student Droplets before deletion"
+  community.digitalocean.digital_ocean_droplet_info:
+    oauth_token: "{{ do_token }}"
+    name: "{{ prefix }}-stu{{ '%02d' | format(student_id) }}"
+  register: target_droplet_info
+  ignore_errors: true
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: student_id
+
+- name: "Delete student Droplets by ID"
+  community.digitalocean.digital_ocean_droplet:
+    oauth_token: "{{ do_token }}"
+    id: "{{ item.data[0].id }}"
+    name: "{{ item.data[0].name }}"
+    state: absent
+    unique_name: yes
+  loop: "{{ target_droplet_info.results }}"
+  when:
+    - item is not failed
+    - item.data is defined
+    - item.data | length > 0
+    - item.data[0].name.startswith(prefix) or (item.data[0].tags is defined and prefix in item.data[0].tags)
+  loop_control:
+    label: "{{ item.student_id | default('student') }}"
+  ignore_errors: true

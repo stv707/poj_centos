@@ -1,0 +1,58 @@
+---
+# automation/roles/export_nodes_json/tasks/main.yml
+# =============================================================================
+# 🔒 PRE-PACKAGED BETALAB PLATFORM ROLE — DO NOT MODIFY
+# =============================================================================
+# Aggregates provisioned student nodes and outputs the standardized
+# /ansible/output/nodes_{{ job_id }}.json file for BetaLab backend ingestion.
+
+- name: "Initialize node inventory list"
+  ansible.builtin.set_fact:
+    all_provisioned_nodes: []
+
+- name: "Aggregate student node details"
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: current_stu_id
+  vars:
+    student_tag: "{{ prefix }}-stu{{ '%02d' | format(current_stu_id) }}"
+    current_vm_host: "{{ hostvars[student_tag] | default({}) }}"
+    student_ip: "{{ current_vm_host.jump_host_ip | default(current_vm_host.ansible_host | default('')) }}"
+    student_domain: "ssh.{{ student_tag }}.{{ dns_zone_name }}"
+  ansible.builtin.set_fact:
+    all_provisioned_nodes: "{{ all_provisioned_nodes + [ {
+      'vmName': student_tag,
+      'studentTag': 'stu' ~ ('%02d' | format(current_stu_id)),
+      'studentIndex': current_stu_id,
+      'publicIp': student_ip,
+      'sshDomain': student_domain,
+      'username': admin_username,
+      'password': drootpass,
+      'port': 22,
+      'isJumpHost': current_vm_host.is_jump_host | default(true),
+      'role': current_vm_host.role | default('jumpbox'),
+      'ingressIp': current_vm_host.ingress_ip | default(none),
+      'k8sClusterName': current_vm_host.k8s_cluster_name | default(none),
+      'status': 'online'
+    } ] }}"
+
+- name: "Ensure /ansible/output directory exists"
+  ansible.builtin.file:
+    path: "/ansible/output"
+    state: directory
+    mode: '0755'
+  ignore_errors: true
+
+- name: "Write nodes JSON to /ansible/output/nodes_{{ job_id }}.json"
+  ansible.builtin.copy:
+    content: "{{ all_provisioned_nodes | to_nice_json }}"
+    dest: "/ansible/output/nodes_{{ job_id }}.json"
+    mode: '0644'
+  ignore_errors: true
+
+- name: "Write nodes JSON fallback to /ansible/output/nodes.json"
+  ansible.builtin.copy:
+    content: "{{ all_provisioned_nodes | to_nice_json }}"
+    dest: "/ansible/output/nodes.json"
+    mode: '0644'
+  ignore_errors: true

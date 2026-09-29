@@ -1,0 +1,55 @@
+apiVersion: training.educates.dev/v1beta1
+kind: Workshop
+metadata:
+  name: poj-centos-administration
+spec:
+  title: "Pentadbiran CentOS Stream 10 untuk Jabatan Kehakiman Malaysia (POJ)"
+  description: "Bengkel amali dua jam pentadbiran sistem Linux CentOS Stream 10 merangkumi diagnostik servis systemd, pengurusan pengguna dan hak akses sudo, pengurusan storan LVM, keselamatan rangkaian firewalld, dan automasi tugas berkala."
+  vendor: "cognitoz"
+  authors:
+    - "Cognitoz BetaLab"
+    - "Steven Nagendran"
+  difficulty: "beginner"
+  duration: 120m
+  publish:
+    image: "$(image_repository)/poj-centos-administration-files:$(workshop_version)"
+    files:
+      - directory:
+          path: .
+        includePaths:
+          - /workshop/**
+          - /exercises/**
+          - /README.md
+  workshop:
+    image: quay.cognitoz.com/cognitoznet/betalab-base-environment:latest
+    files:
+      - git:
+          url: https://github.com/stv707/poj_centos.git
+          revision: main
+          secret: github-workshop-auth
+        includePaths:
+          - /workshop/**
+          - /exercises/**
+          - /README.md
+        path: .
+  session:
+    resources:
+      memory: 512Mi
+    namespaces:
+      budget: medium
+      security:
+        token:
+          enabled: false
+    applications:
+      terminal:
+        enabled: true
+        layout: default
+      editor:
+        enabled: true
+      slides:
+        enabled: true
+      files:
+        enabled: true
+    dashboards:
+      - name: "Terminal 2"
+        url: "terminal:second"

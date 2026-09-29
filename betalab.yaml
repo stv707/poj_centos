@@ -1,0 +1,62 @@
+apiVersion: betalab.cognitoz.com/v1alpha1
+kind: TrainingPackage
+metadata:
+  name: poj-centos-administration
+  title: "CentOS Stream 10 Administration for POJ Putrajaya"
+  slug: poj-centos-administration
+  version: 1.0.0
+  description: "Bengkel amali 2 jam pentadbiran sistem Linux CentOS Stream 10 merangkumi siasatan perkhidmatan (systemd/journalctl), pengurusan akaun & kebenaran (sudo), pengurusan storan LVM, keselamatan rangkaian firewalld, dan automasi pakej (dnf/cron)."
+  category: linux
+  difficulty: beginner
+spec:
+  courseware:
+    directory: "."
+    workshopDefinition: resources/workshop.yaml
+    durationMinutes: 120
+    durationDays: 1
+  infrastructure:
+    directory: automation
+    entrypoint: site.yml
+    teardown: tear.yml
+    cloudProvider: digitalocean
+    defaultPax: 1
+    vmSpecs:
+      cpu: 2
+      memoryGb: 4
+      nestedVirtualization: false
+      recommendedSku: s-2vcpu-4gb
+    requiredVars:
+      - name: DO_TOKEN
+        description: DigitalOcean API token used to provision the CentOS demonstration VM
+        secret: true
+      - name: AZURE_CLIENT_ID
+        description: Azure service principal client ID used for DNS A-records
+        secret: true
+      - name: AZURE_SECRET
+        description: Azure service principal client secret used for DNS
+        secret: true
+      - name: AZURE_TENANT
+        description: Azure tenant ID used for DNS
+        secret: true
+      - name: AZURE_SUBSCRIPTION_ID
+        description: Azure subscription ID used for DNS
+        secret: true
+    optionalVars:
+      - name: DO_DROPLET_SIZE
+        default: "2cpu-4gb"
+        description: DigitalOcean VM droplet size (e.g. 1cpu-2gb, 2cpu-4gb, 4cpu-8gb)
+      - name: DO_SSH_KEYS
+        default: "58950506,48486622,48486618"
+        description: DigitalOcean SSH key IDs injected into the demonstration VM
+      - name: DO_IMAGE
+        default: "centos-stream-10-x64"
+        description: DigitalOcean CentOS distribution image slug
+      - name: DO_REGION
+        default: "sgp1"
+        description: DigitalOcean datacenter region
+      - name: AZURE_DNS_ZONE_NAME
+        default: "steven.asia"
+        description: DNS apex zone name
+      - name: AZURE_DNS_ZONE_RG
+        default: "training-dns-zone-rg"
+        description: Azure resource group containing the DNS zone

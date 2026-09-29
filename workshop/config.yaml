@@ -1,0 +1,10 @@
+params:
+  - name: student_id
+    aliases:
+      - STUDENT_ID
+  - name: student_num
+    aliases:
+      - STUDENT_NUM
+  - name: student_domain
+    aliases:
+      - STUDENT_DOMAIN

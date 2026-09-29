@@ -1,0 +1,19 @@
+---
+# automation/tear.yml
+# =============================================================================
+# COGNITOZ BETALAB — TEARDOWN ORCHESTRATOR
+# =============================================================================
+
+- name: "Teardown Cloud Resources & Clean DNS Records"
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    # 1. AI AGENT: Implement automation/roles/cloud_teardown/tasks/main.yml
+    - role: cloud_teardown
+
+    # 2. Delete DNS records created for this cohort prefix
+    - role: dns_registration
+      vars:
+        teardown_dns: true

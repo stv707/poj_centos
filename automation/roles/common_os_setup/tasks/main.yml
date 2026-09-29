@@ -1,0 +1,116 @@
+---
+# automation/roles/common_os_setup/tasks/main.yml
+# =============================================================================
+# CENTOS STREAM 10 COMMON OS SETUP
+# =============================================================================
+# Standardizes the student 'droot' user with wheel/sudo rights, SSH keys,
+# and terminal branding for CentOS Stream 10.
+
+- name: "Ensure student user '{{ admin_username }}' exists with wheel (sudoer) rights"
+  ansible.builtin.user:
+    name: "{{ admin_username }}"
+    shell: /bin/bash
+    groups: wheel
+    append: yes
+    create_home: yes
+    password: "{{ drootpass | password_hash('sha512') }}"
+
+- name: "Configure passwordless sudo for '{{ admin_username }}'"
+  ansible.builtin.copy:
+    content: "{{ admin_username }} ALL=(ALL) NOPASSWD:ALL\n"
+    dest: "/etc/sudoers.d/99-{{ admin_username }}"
+    mode: '0440'
+    validate: 'visudo -cf %s'
+
+- name: "Inject SSH public key into student and root accounts"
+  ansible.posix.authorized_key:
+    user: "{{ item }}"
+    state: present
+    key: "{{ ssh_pub_key | default(lookup('env', 'SSH_PUB_KEY') | default(lookup('file', '~/.ssh/id_rsa.pub', errors='ignore'), true)) }}"
+  loop:
+    - "{{ admin_username }}"
+    - root
+  when: (ssh_pub_key | default('') | length > 0) or (lookup('env', 'SSH_PUB_KEY') | length > 0) or (lookup('file', '~/.ssh/id_rsa.pub', errors='ignore') | length > 0)
+
+- name: "Ensure /etc/ssh/sshd_config.d directory exists"
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    mode: '0755'
+
+- name: "Configure SSH for pubkey and password authentication on CentOS"
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/99-student.conf
+    mode: '0600'
+    content: |
+      PasswordAuthentication yes
+      PubkeyAuthentication yes
+      PermitRootLogin yes
+      ClientAliveInterval 60
+      ClientAliveCountMax 10
+
+- name: "Ensure main sshd_config allows password authentication"
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  loop:
+    - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+    - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication yes' }
+    - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin yes' }
+  ignore_errors: true
+
+- name: "Restart sshd service to apply authentication changes"
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+  ignore_errors: true
+
+- name: "Deploy standardized student banner in /etc/motd"
+  ansible.builtin.copy:
+    dest: /etc/motd
+    mode: '0644'
+    content: |
+      ================================================================================
+                             *** JABATAN KEHAKIMAN MALAYSIA (POJ) ***
+                           CentOS Stream 10 Enterprise Administration
+      ================================================================================
+       KURSUS:     {{ course_name }}
+       PENGGUNA:   {{ admin_username }} (sudoer)
+       KESELAMATAN: Sesi latihan aktif (Dipantau & Diaudit)
+      ================================================================================
+
+- name: "Deploy dynamic terminal banner in /etc/profile.d/99-banner.sh"
+  ansible.builtin.copy:
+    dest: /etc/profile.d/99-banner.sh
+    mode: '0755'
+    content: |
+      #!/bin/bash
+      RED='\033[0;31m'
+      BOLD='\033[1m'
+      YELLOW='\033[1;33m'
+      CYAN='\033[0;36m'
+      GREEN='\033[0;32m'
+      NC='\033[0m'
+
+      VM_NAME=$(hostname)
+      PUBLIC_IP=$(ip -4 addr show eth0 2>/dev/null | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n 1)
+
+      echo -e "${CYAN}${BOLD}"
+      echo "================================================================================"
+      echo "                  *** JABATAN KEHAKIMAN MALAYSIA (POJ) ***                     "
+      echo "                 CentOS Stream 10 Enterprise Administration                     "
+      echo "================================================================================"
+      echo -e "${NC}"
+      echo -e " ${BOLD}LAB COURSE:${NC}   ${CYAN}${BOLD}{{ course_name }}${NC}"
+      echo -e " ${BOLD}STUDENT VM:${NC}   ${GREEN}${BOLD}${VM_NAME}${NC}"
+      echo -e " ${BOLD}PUBLIC IP:${NC}    ${GREEN}${BOLD}${PUBLIC_IP:-$(hostname -I 2>/dev/null | awk '{print $1}')}${NC}"
+      echo -e " ${BOLD}PENGGUNA:${NC}     ${YELLOW}${BOLD}$(whoami)${NC} (Kumpulan: $(groups))"
+      echo -e " ${BOLD}SESI:${NC}         Sesi Makmal Amali POJ Putrajaya"
+      echo
+      echo -e " ${YELLOW}${BOLD}POLISI PENGGUNAAN:${NC}"
+      echo " • Pelayan ini khusus untuk sesi amali pentadbiran CentOS POJ Putrajaya."
+      echo " • Sila gunakan arahan 'sudo' dengan cermat semasa menjalankan makmal."
+      echo -e "${CYAN}${BOLD}================================================================================${NC}"
+      echo

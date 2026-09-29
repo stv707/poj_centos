@@ -1,0 +1,289 @@
+---
+- name: "Phase 1 - Provision POJ CentOS Stream 10 demonstration VMs"
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: cloud_provision
+
+- name: "Phase 2 - Configure student operating system"
+  hosts: student_vms
+  gather_facts: no
+  strategy: free
+  ignore_unreachable: yes
+  remote_user: root
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: common_os_setup
+
+- name: "Phase 2b - Setup CentOS Stream 10 administration environment & lab scenarios"
+  hosts: student_vms
+  gather_facts: no
+  remote_user: root
+  vars_files:
+    - group_vars/all.yml
+  tasks:
+    - name: "Ensure DNF package cache is initialized"
+      ansible.builtin.raw: dnf clean all && dnf makecache
+      changed_when: false
+
+    - name: "Install core enterprise administration packages via DNF"
+      ansible.builtin.dnf:
+        name:
+          - curl
+          - wget
+          - vim-enhanced
+          - nano
+          - net-tools
+          - bind-utils
+          - tar
+          - gzip
+          - lsof
+          - tmux
+          - git
+          - rsync
+          - bash-completion
+          - tree
+          - firewalld
+          - lvm2
+          - cronie
+          - nginx
+          - policycoreutils
+        state: present
+      register: dnf_install
+      retries: 5
+      delay: 5
+      until: dnf_install is not failed
+
+    - name: "Ensure firewalld is enabled and running"
+      ansible.builtin.systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: "Ensure cronie (crond) is enabled and running"
+      ansible.builtin.systemd:
+        name: crond
+        state: started
+        enabled: yes
+
+    # -------------------------------------------------------------------------
+    # LAB 1 SCENARIO: Systemd Service & Journalctl Troubleshooting
+    # -------------------------------------------------------------------------
+    - name: "Ensure /etc/poj and /opt/poj directories exist"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /etc/poj
+        - /opt/poj
+        - /opt/poj/scripts
+        - /opt/poj/dokumen_kehakiman
+        - /backup
+
+    - name: "Deploy mock case monitor script"
+      ansible.builtin.copy:
+        dest: /usr/local/bin/poj-case-monitor.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          CONFIG_FILE="/etc/poj/case-monitor.conf"
+          if [ ! -f "$CONFIG_FILE" ]; then
+              echo "[FATAL] Configuration file $CONFIG_FILE not found!" >&2
+              exit 1
+          fi
+          source "$CONFIG_FILE"
+          if [ -z "$PORT" ] || [ "$PORT" -gt 65535 ] || [ "$PORT" -lt 1024 ]; then
+              echo "[ERROR] Invalid PORT configuration '$PORT' in $CONFIG_FILE! Port must be between 1024 and 65535." >&2
+              exit 2
+          fi
+          echo "[INFO] POJ Case Monitor Service starting on port $PORT..."
+          echo "[INFO] Monitoring judicial electronic filing queue: ACTIVE"
+          while true; do
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] [HEARTBEAT] Case queue: 0 pending, 14 processed."
+              sleep 15
+          done
+
+    - name: "Deploy deliberate configuration error for student troubleshooting lab"
+      ansible.builtin.copy:
+        dest: /etc/poj/case-monitor.conf
+        mode: '0644'
+        content: |
+          # POJ Case Monitor Configuration
+          # Pelayan pemantauan sistem pendaftaran kes mahkamah
+          SERVICE_NAME="POJ_Case_Tracker_v1"
+          # RALAT SENGAJA: Port melebihi julat maksimum TCP (65535) untuk sesi diagnostik
+          PORT=99999
+          LOG_LEVEL="DEBUG"
+
+    - name: "Deploy systemd unit file for poj-case-monitor"
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/poj-case-monitor.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=POJ Electronic Court Case Monitoring Service
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/local/bin/poj-case-monitor.sh
+          Restart=on-failure
+          RestartSec=5s
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: "Reload systemd daemon"
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: "Trigger failed service start so telemetry is populated for Lab 1"
+      ansible.builtin.systemd:
+        name: poj-case-monitor
+        state: started
+      ignore_errors: true
+
+    # -------------------------------------------------------------------------
+    # LAB 2 SCENARIO: User Management & Sudoers Least Privilege
+    # -------------------------------------------------------------------------
+    - name: "Ensure sample documents exist in /opt/poj/dokumen_kehakiman"
+      ansible.builtin.copy:
+        dest: "/opt/poj/dokumen_kehakiman/{{ item.name }}"
+        mode: '0644'
+        content: "{{ item.content }}"
+      loop:
+        - { name: 'senarai_kes_2026.txt', content: 'KES-001: Mahkamah Sivil Putrajaya - Selesai\nKES-002: Mahkamah Jenayah - Perbicaraan\nKES-003: Mahkamah Rayuan - Penangguhan\n' }
+        - { name: 'polisi_keselamatan.txt', content: 'KLASIFIKASI: SULIT\nSemua dokumen mahkamah tertakluk di bawah Akta Rahsia Rasmi.\n' }
+
+    # -------------------------------------------------------------------------
+    # LAB 3 SCENARIO: Storage & LVM Practice Loop Device
+    # -------------------------------------------------------------------------
+    - name: "Create 2GB dedicated raw disk image for LVM lab practice"
+      ansible.builtin.command: dd if=/dev/zero of=/var/lib/poj_disk.img bs=1M count=2048
+      args:
+        creates: /var/lib/poj_disk.img
+
+    - name: "Attach disk image to loopback device"
+      ansible.builtin.shell: |
+        EXISTING=$(losetup -j /var/lib/poj_disk.img | cut -d: -f1)
+        if [ -z "$EXISTING" ]; then
+            losetup -fP /var/lib/poj_disk.img
+        fi
+      changed_when: false
+
+    - name: "Deploy loop device persistence systemd service"
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/poj-loop-disk.service
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Setup POJ Lab Loop Device for LVM
+          DefaultDependencies=no
+          Before=local-fs-pre.target
+
+          [Service]
+          Type=oneshot
+          ExecStart=/bin/sh -c 'losetup -j /var/lib/poj_disk.img | grep -q poj_disk || losetup -fP /var/lib/poj_disk.img'
+          RemainAfterExit=yes
+
+          [Install]
+          WantedBy=local-fs.target
+
+    - name: "Enable poj-loop-disk service"
+      ansible.builtin.systemd:
+        name: poj-loop-disk
+        enabled: yes
+        daemon_reload: yes
+
+    # -------------------------------------------------------------------------
+    # LAB 4 SCENARIO: Network & Nginx Web Server for Firewall Lab
+    # -------------------------------------------------------------------------
+    - name: "Configure custom Nginx welcome landing page for POJ"
+      ansible.builtin.copy:
+        dest: /usr/share/nginx/html/index.html
+        mode: '0644'
+        content: |
+          <!DOCTYPE html>
+          <html lang="ms">
+          <head>
+            <meta charset="UTF-8">
+            <title>Portal Dalaman Jabatan Kehakiman Malaysia</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; text-align: center; padding: 60px 20px; }
+              .card { background: #1e293b; max-width: 650px; margin: auto; padding: 40px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+              h1 { color: #38bdf8; font-size: 26px; margin-bottom: 8px; }
+              p { color: #94a3b8; line-height: 1.6; font-size: 15px; }
+              .badge { display: inline-block; background: #0284c7; color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 12px; margin-top: 15px; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>Portal Dalaman POJ Putrajaya</h1>
+              <p>Pelayan Web Nginx berjalan dengan lancar pada sistem operasi <strong>CentOS Stream 10</strong>.</p>
+              <p>Perkhidmatan rangkaian dan tembok api (firewalld) telah dikonfigurasikan dengan sempurna.</p>
+              <div class="badge">Sistem Beroperasi (Active)</div>
+            </div>
+          </body>
+          </html>
+
+    - name: "Ensure Nginx is started and enabled"
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+
+    # -------------------------------------------------------------------------
+    # LAB 5 SCENARIO: Automated Backup Script for Cron
+    # -------------------------------------------------------------------------
+    - name: "Deploy sample judicial backup script in /opt/poj/scripts/backup-kes.sh"
+      ansible.builtin.copy:
+        dest: /opt/poj/scripts/backup-kes.sh
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          # Skrip Sandaran Automatik Dokumen Kehakiman POJ
+          SRC_DIR="/opt/poj/dokumen_kehakiman"
+          DEST_DIR="/backup"
+          TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+          ARCHIVE_FILE="$DEST_DIR/backup_kes_$TIMESTAMP.tar.gz"
+
+          mkdir -p "$DEST_DIR"
+          if [ -d "$SRC_DIR" ]; then
+              tar -czf "$ARCHIVE_FILE" -C "$SRC_DIR" .
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] Sandaran berjaya dihasilkan: $ARCHIVE_FILE ($(du -h "$ARCHIVE_FILE" | cut -f1))" >> /var/log/poj-backup.log
+          else
+              echo "[$(date '+%Y-%m-%d %H:%M:%S')] [RALAT] Direktori sumber $SRC_DIR tidak wujud!" >> /var/log/poj-backup.log
+              exit 1
+          fi
+
+- name: "Phase 3 - Register Azure DNS records"
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: dns_registration
+
+- name: "Phase 4 - Deployment Summary"
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - group_vars/all.yml
+  tasks:
+    - name: "Output CentOS student environment details"
+      ansible.builtin.debug:
+        msg:
+          - "================================================================="
+          - "   CENTOS STREAM 10 POJ WORKSHOP DEPLOYMENT COMPLETED!            "
+          - "================================================================="
+          - "Cohort Prefix:  {{ prefix }}"
+          - "OS Distro:      CentOS Stream 10"
+          - "Admin Username: {{ admin_username }}"
+          - "Admin Password: {{ drootpass }}"
+          - "DNS Domain:     {{ dns_zone_name }}"
+          - "Total Students: {{ student_count | length }}"
+          - "================================================================="

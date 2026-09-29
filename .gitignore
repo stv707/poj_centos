@@ -1,0 +1,32 @@
+# Local environment and credential files (NEVER commit secrets to git)
+.env
+.env.*
+!.env.example
+*.local.yml
+*.vault.yml
+vault.yml
+*.key
+*.pem
+*.rsa
+
+# Ansible runtime artifacts & output
+*.retry
+*.log
+.ansible/
+output/
+automation/output/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Node dependencies
+node_modules/
+myslides/pngs/
+
+
+dist/
+myslides/web/

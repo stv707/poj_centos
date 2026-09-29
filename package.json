@@ -1,0 +1,27 @@
+{
+  "name": "centos-admin-workshop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pentadbiran CentOS Stream 10 untuk Jabatan Kehakiman Malaysia (POJ)",
+  "scripts": {
+    "dev": "slidev --open",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "^0.48.0",
+    "@slidev/theme-default": "latest"
+  },
+  "keywords": [
+    "centos",
+    "linux",
+    "sysadmin",
+    "poj",
+    "systemd",
+    "lvm",
+    "firewalld",
+    "betalab"
+  ],
+  "author": "Cognitoz I.T Training",
+  "license": "ISC"
+}

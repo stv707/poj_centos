@@ -1,0 +1,104 @@
+---
+- name: "Display POJ CentOS Stream 10 provisioning target"
+  ansible.builtin.debug:
+    msg:
+      - "Job ID: {{ job_id }}"
+      - "Cohort prefix: {{ prefix }}"
+      - "Students: {{ student_count }}"
+      - "Image: {{ do_jump_host.image }}"
+      - "Droplet Size: {{ do_jump_host.size }}"
+      - "Region: {{ do_jump_host.region }}"
+
+- name: "Query DigitalOcean account SSH keys when none are specified"
+  when: (do_jump_host.ssh_keys | length == 0) and (do_token | length > 0)
+  ansible.builtin.uri:
+    url: "https://api.digitalocean.com/v2/account/keys"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ do_token }}"
+  register: account_ssh_keys
+  ignore_errors: true
+
+- name: "Use the first available account SSH keys as fallback"
+  when:
+    - do_jump_host.ssh_keys | length == 0
+    - account_ssh_keys is defined
+    - account_ssh_keys.json is defined
+    - account_ssh_keys.json.ssh_keys is defined
+    - account_ssh_keys.json.ssh_keys | length > 0
+  ansible.builtin.set_fact:
+    do_jump_host: "{{ do_jump_host | combine({'ssh_keys': account_ssh_keys.json.ssh_keys | map(attribute='id') | list}) }}"
+
+- name: "Create student Droplets with CentOS Stream 10"
+  community.digitalocean.digital_ocean_droplet:
+    state: present
+    unique_name: yes
+    name: "{{ prefix }}-stu{{ '%02d' | format(student_id) }}"
+    oauth_token: "{{ do_token }}"
+    size: "{{ do_jump_host.size }}"
+    region: "{{ do_jump_host.region }}"
+    image: "{{ do_jump_host.image }}"
+    ssh_keys: "{{ do_jump_host.ssh_keys }}"
+    tags:
+      - "{{ prefix }}"
+      - "poj-centos"
+      - "stu{{ '%02d' | format(student_id) }}"
+    wait: false
+  register: create_droplets_result
+  until: create_droplets_result is not failed
+  retries: 3
+  delay: 3
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: student_id
+
+- name: "Wait for newly created Droplets to initialize"
+  ansible.builtin.pause:
+    seconds: 20
+  when: (create_droplets_result.results is defined) and (create_droplets_result.results | selectattr('changed', 'equalto', true) | list | length > 0)
+
+- name: "Wait for student Droplets to become active and expose public IPs"
+  community.digitalocean.digital_ocean_droplet_info:
+    oauth_token: "{{ do_token }}"
+    name: "{{ prefix }}-stu{{ '%02d' | format(student_id) }}"
+  register: all_droplet_facts
+  until: >-
+    (all_droplet_facts is not failed) and
+    (all_droplet_facts.data is defined) and
+    (all_droplet_facts.data | length > 0) and
+    (all_droplet_facts.data[0].status == 'active') and
+    (all_droplet_facts.data[0].networks.v4 | selectattr('type', 'equalto', 'public') | map(attribute='ip_address') | list | length > 0)
+  retries: 30
+  delay: 10
+  loop: "{{ student_count }}"
+  loop_control:
+    loop_var: student_id
+
+- name: "Register Droplets in the in-memory student_vms inventory"
+  ansible.builtin.add_host:
+    name: "{{ prefix }}-stu{{ '%02d' | format(item.student_id) }}"
+    ansible_host: "{{ item.data[0].networks.v4 | selectattr('type', 'equalto', 'public') | map(attribute='ip_address') | first }}"
+    ansible_user: root
+    groups: student_vms
+    jump_host_ip: "{{ item.data[0].networks.v4 | selectattr('type', 'equalto', 'public') | map(attribute='ip_address') | first }}"
+    is_jump_host: true
+    role: jumpbox
+    vm_name: "{{ prefix }}-stu{{ '%02d' | format(item.student_id) }}"
+    student_tag: "stu{{ '%02d' | format(item.student_id) }}"
+    student_id: "{{ item.student_id }}"
+    student_index: "{{ item.student_id }}"
+    ansible_ssh_private_key_file: /root/.ssh/id_rsa
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+  loop: "{{ all_droplet_facts.results }}"
+  loop_control:
+    label: "{{ prefix }}-stu{{ '%02d' | format(item.student_id) }}"
+
+- name: "Wait for SSH on every student Droplet"
+  ansible.builtin.wait_for:
+    host: "{{ item.data[0].networks.v4 | selectattr('type', 'equalto', 'public') | map(attribute='ip_address') | first }}"
+    port: 22
+    timeout: 360
+    delay: 5
+  loop: "{{ all_droplet_facts.results }}"
+  loop_control:
+    label: "{{ prefix }}-stu{{ '%02d' | format(item.student_id) }}"
