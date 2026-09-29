@@ -32,13 +32,22 @@
     - root
   when: (ssh_pub_key | default('') | length > 0) or (lookup('env', 'SSH_PUB_KEY') | length > 0) or (lookup('file', '~/.ssh/id_rsa.pub', errors='ignore') | length > 0)
 
+- name: "Inject Educates Workshop Pod ED25519 public key for student and root accounts"
+  ansible.posix.authorized_key:
+    user: "{{ item }}"
+    state: present
+    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIODWCkZl+eNNs7rhvF6iMblAmSVjxO6s7HUgqoyr2br0 educates-workshop-pod@cognitoz.com"
+  loop:
+    - "{{ admin_username }}"
+    - root
+
 - name: "Ensure /etc/ssh/sshd_config.d directory exists"
   ansible.builtin.file:
     path: /etc/ssh/sshd_config.d
     state: directory
     mode: '0755'
 
-- name: "Configure SSH for pubkey and password authentication on CentOS"
+- name: "Configure SSH for pubkey, password auth, and disable OpenSSH 9.9 penalties on CentOS Stream 10"
   ansible.builtin.copy:
     dest: /etc/ssh/sshd_config.d/99-student.conf
     mode: '0600'
@@ -48,6 +57,8 @@
       PermitRootLogin yes
       ClientAliveInterval 60
       ClientAliveCountMax 10
+      PerSourcePenalties no
+      MaxStartups 100:30:200
 
 - name: "Ensure main sshd_config allows password authentication"
   ansible.builtin.lineinfile:
