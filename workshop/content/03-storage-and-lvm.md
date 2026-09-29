@@ -21,6 +21,10 @@ Pelayan makmal anda telah dibekalkan dengan fail imej cakera 2GB di `/var/lib/po
 ```terminal:execute
 command: |-
   LOOP_DEV=$(losetup -j /var/lib/poj_disk.img | cut -d: -f1)
+  if [ -z "$LOOP_DEV" ]; then
+    sudo losetup -fP /var/lib/poj_disk.img
+    LOOP_DEV=$(losetup -j /var/lib/poj_disk.img | cut -d: -f1)
+  fi
   echo "Peranti blok latihan anda ialah: $LOOP_DEV"
   lsblk "$LOOP_DEV"
 ```
@@ -113,13 +117,51 @@ Perhatikan saiz `/mnt/storan_kes` meningkat daripada **1.0G ke 1.5G** serta-mert
 
 ## 9. Konfigurasi Lekapan Kekal (/etc/fstab)
 
-Dapatkan UUID unik volum LVM untuk konfigurasi ketekunan but:
+Lekapan secara manual dengan arahan `mount` akan terbatal secara automatik sekiranya pelayan dimulakan semula (*reboot*). Untuk memastikan sistem sentiasa melekapkan volum `/mnt/storan_kes` secara automatik semasa fasa but sistem, daftarkan entri volum ke dalam fail konfigurasi `/etc/fstab`.
+
+Dapatkan UUID volum LVM dan daftarkan entri kekal ke dalam `/etc/fstab`:
 
 ```terminal:execute
 command: |-
-  sudo blkid /dev/vg_kehakiman/lv_kes
+  LVM_UUID=$(sudo blkid -s UUID -o value /dev/vg_kehakiman/lv_kes)
+  echo "UUID=${LVM_UUID} /mnt/storan_kes xfs defaults 0 0" | sudo tee -a /etc/fstab
+  tail -n 2 /etc/fstab
 ```
 
-Entri standard di dalam `/etc/fstab` menggunakan UUID menjamin sistem sentiasa melekapkan cakera ke `/mnt/storan_kes` secara automatik semasa setiap kali sistem dimulakan.
+{{< note >}}
+Struktur 6 medan standard dalam setiap baris entri `/etc/fstab`:
+1. **Device/UUID**: `UUID=...` (Pengecam unik peranti storan)
+2. **Mount Point**: `/mnt/storan_kes` (Lokasi direktori lekapan sistem fail)
+3. **Filesystem**: `xfs` (Jenis sistem fail)
+4. **Options**: `defaults` (`rw, suid, dev, exec, auto, nouser, async`)
+5. **Dump**: `0` (Nyahaktif sandaran utiliti dump lapuk)
+6. **Fsck Order**: `0` (Sistem fail moden XFS menguruskan integriti sendiri tanpa perlu semakan fsck semasa but)
+{{< /note >}}
+
+## 10. Menguji dan Mengesahkan Lekapan Automatik
+
+{{< warning >}}
+**Amalan Wajib Pentadbir Linux Enterprise:** Jangan sesekali mulakan semula (*reboot*) pelayan sebelum menguji integriti fail `/etc/fstab`. Ralat sintaks dalam fail ini boleh menyebabkan pelayan gagal but dan tersekat dalam mod kecemasan (*Emergency Mode*).
+{{< /warning >}}
+
+Nyahlekap (*unmount*) volum untuk menguji konfigurasi `/etc/fstab`:
+
+```terminal:execute
+command: |-
+  sudo umount /mnt/storan_kes
+  df -hT /mnt/storan_kes
+```
+
+Jalankan arahan `mount -av` untuk menguji bahawa sistem berupaya melekapkan semua fail sistem dalam `/etc/fstab` tanpa sebarang ralat:
+
+```terminal:execute
+command: |-
+  sudo mount -av
+  findmnt /mnt/storan_kes
+  ls -lh /mnt/storan_kes
+```
+
+Perhatikan bahawa direktori `/mnt/storan_kes` kini berjaya dilekapkan semula secara automatik, dan fail data rekod kehakiman `arkib_kes_01.dat` tetap selamat!
 
 Klik butang **Next** untuk melangkah ke **Lab 4: Rangkaian & Keselamatan Port dengan firewalld**.
+
