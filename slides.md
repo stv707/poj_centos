@@ -738,5 +738,17 @@ Masa Kumulatif: 01:33 - 01:34 (Masa Berlalu: 94 min)
 
 <!--
 Tempoh Slaid: 2 minit
-Masa Kumulatif: 01:50 - 02:00 (Masa Berlalu: 120 min)
+Masa Kumulatif: 01:50 - 01:52 (Masa Berlalu: 112 min)
+-->
+
+---
+
+<FeedbackQASlide />
+
+<!--
+Tempoh Slaid: 8 minit
+Masa Kumulatif: 01:52 - 02:00 (Masa Berlalu: 120 min)
+
+Cadangan Penerangan:
+Kita kini membuka ruang untuk sesi soal jawab teknikal dan maklum balas daripada warga Jabatan Kehakiman Malaysia (POJ Putrajaya). Sila imbas kod QR di sebelah kanan untuk melengkapkan penilaian bengkel. Terima kasih atas penyertaan padu anda!
 -->
