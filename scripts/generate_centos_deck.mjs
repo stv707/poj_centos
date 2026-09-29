@@ -6,7 +6,8 @@ const require = createRequire(import.meta.url);
 const PptxGenJS = require('D:/poj/mariadb-admin/node_modules/pptxgenjs');
 
 const pptx = new PptxGenJS();
-pptx.layout = 'LAYOUT_16x9';
+pptx.defineLayout({ name: 'WIDESCREEN_16x9', width: 13.333, height: 7.5 });
+pptx.layout = 'WIDESCREEN_16x9';
 pptx.author = 'Cognitoz I.T Training Sdn Bhd';
 pptx.company = 'Cognitoz I.T Training Sdn Bhd';
 pptx.subject = 'Pentadbiran CentOS Stream 10 untuk Jabatan Kehakiman Malaysia (POJ)';
